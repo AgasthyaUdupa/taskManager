@@ -6,9 +6,10 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
 
+  // Fetch tasks from the backend
   const fetchTasks = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/tasks');
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/tasks`); // Use environment variable for backend URL
       setTasks(res.data);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -19,12 +20,13 @@ function App() {
     fetchTasks();
   }, []);
 
+  // Add a new task
   const handleAddTask = async () => {
     if (!newTask.trim()) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/tasks', {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/tasks`, { // Use environment variable
         title: newTask,
-        completed: false
+        completed: false,
       });
       setTasks([...tasks, res.data]);
       setNewTask('');
@@ -33,9 +35,10 @@ function App() {
     }
   };
 
+  // Delete a task
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/tasks/${id}`); // Use environment variable
       setTasks(tasks.filter((task) => task._id !== id));
     } catch (err) {
       console.error('Delete error:', err);
