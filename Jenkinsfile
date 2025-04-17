@@ -4,9 +4,12 @@ pipeline {
     environment {
         BACKEND_URL = 'https://taskmanager-5kmh.onrender.com'
         FRONTEND_URL = 'https://taskmanager-frontend-uas9.onrender.com'
-
+        
         // Render credentials (Secret Text)
         RENDER_API_KEY = credentials('render-api-key')
+
+        // GitHub token (Secret Text with ID: github-token)
+        GITHUB_TOKEN = credentials('github-token')
 
         // Render service IDs (from Render dashboard)
         BACKEND_SERVICE_ID = 'srv-cvv56vhr0fns73a44270'
@@ -17,8 +20,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Simplified git checkout for public repo
-                    git url: 'https://github.com/AgasthyaUdupa/taskManager.git', branch: 'main'
+                    // Authenticate and clone the private GitHub repository using the PAT
+                    git url: 'https://${GITHUB_TOKEN}@github.com/AgasthyaUdupa/taskManager.git', branch: 'main'
                 }
             }
         }
