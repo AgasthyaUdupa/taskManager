@@ -17,8 +17,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Ensures the repository is checked out properly using SCM
-                checkout scm
+                script {
+                    // Ensure that the repository is checked out properly
+                    checkout scm
+                }
             }
         }
 
