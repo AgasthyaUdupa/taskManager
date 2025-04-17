@@ -2,36 +2,35 @@ pipeline {
     agent any
 
     environment {
-        // Environment variables
         BACKEND_URL = 'https://taskmanager-5kmh.onrender.com'
         FRONTEND_URL = 'https://taskmanager-frontend-uas9.onrender.com'
 
-        // Render credentials (Secret Text)
+        // Secret Texts (configured in Jenkins credentials)
         RENDER_API_KEY = credentials('render-api-key')
+        GITHUB_TOKEN = credentials('github-token') // Only needed if repo is private
 
-        // GitHub token (Secret Text with ID: github-token)
-        GITHUB_TOKEN = credentials('github-token')
-
-        // Render service IDs (from Render dashboard)
+        // Render service IDs
         BACKEND_SERVICE_ID = 'srv-cvv56vhr0fns73a44270'
         FRONTEND_SERVICE_ID = 'srv-cvv67c3e5dus73eacgkg'
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                script {
-                    git url: "https://${GITHUB_TOKEN}@github.com/AgasthyaUdupa/taskManager.git", branch: 'main'
-                }
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: "https://github.com/AgasthyaUdupa/taskManager.git",
+                        credentialsId: 'github-token'
+                    ]]
+                ])
             }
         }
 
         stage('Build Backend') {
             steps {
                 dir('backend') {
-                    script {
-                        sh 'docker build -t backend .'
-                    }
+                    sh 'docker build -t backend .'
                 }
             }
         }
@@ -39,43 +38,39 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    script {
-                        sh 'docker build --build-arg VITE_BACKEND_URL=$BACKEND_URL -t frontend .'
-                    }
+                    sh """
+                    docker build --build-arg VITE_BACKEND_URL=${BACKEND_URL} -t frontend .
+                    """
                 }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running backend and frontend tests...'
-                // Add actual test commands here
+                echo '🧪 Running backend and frontend tests...'
+                // Add real test scripts here
             }
         }
 
         stage('Deploy Backend to Render') {
             steps {
-                script {
-                    sh """
-                    curl -X POST https://api.render.com/v1/services/${BACKEND_SERVICE_ID}/deploy \
-                    -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                    -H "Content-Type: application/json" \
+                sh """
+                curl -X POST https://api.render.com/v1/services/${BACKEND_SERVICE_ID}/deploy \\
+                    -H "Authorization: Bearer ${RENDER_API_KEY}" \\
+                    -H "Content-Type: application/json" \\
                     -d '{}'
-                    """
-                }
+                """
             }
         }
 
         stage('Deploy Frontend to Render') {
             steps {
-                script {
-                    sh """
-                    curl -X POST https://api.render.com/v1/services/${FRONTEND_SERVICE_ID}/deploy \
-                    -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                    -H "Content-Type: application/json" \
+                sh """
+                curl -X POST https://api.render.com/v1/services/${FRONTEND_SERVICE_ID}/deploy \\
+                    -H "Authorization: Bearer ${RENDER_API_KEY}" \\
+                    -H "Content-Type: application/json" \\
                     -d '{}'
-                    """
-                }
+                """
             }
         }
     }
