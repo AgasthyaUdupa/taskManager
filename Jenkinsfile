@@ -17,13 +17,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: "https://github.com/AgasthyaUdupa/taskManager.git",
-                        credentialsId: 'github-token'
-                    ]]
-                ])
+                // Ensures the repository is checked out properly using SCM
+                checkout scm
             }
         }
 
