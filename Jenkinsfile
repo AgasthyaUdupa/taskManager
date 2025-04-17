@@ -5,11 +5,10 @@ pipeline {
         BACKEND_URL = 'https://taskmanager-5kmh.onrender.com'
         FRONTEND_URL = 'https://taskmanager-frontend-uas9.onrender.com'
 
-        // Secret Texts (configured in Jenkins credentials)
+        // Render credentials (Secret Text)
         RENDER_API_KEY = credentials('render-api-key')
-        GITHUB_TOKEN = credentials('github-token') // Only needed if repo is private
 
-        // Render service IDs
+        // Render service IDs (from Render dashboard)
         BACKEND_SERVICE_ID = 'srv-cvv56vhr0fns73a44270'
         FRONTEND_SERVICE_ID = 'srv-cvv67c3e5dus73eacgkg'
     }
@@ -18,8 +17,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Ensure that the repository is checked out properly
-                    checkout scm
+                    // Simplified git checkout for public repo
+                    git url: 'https://github.com/AgasthyaUdupa/taskManager.git', branch: 'main'
                 }
             }
         }
