@@ -2,10 +2,8 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/AgasthyaUdupa/taskManager.git'
-        BRANCH = 'main'
         DOCKER_IMAGE_NAME = 'taskmanager-app'
-        RENDER_API_KEY = credentials('render-api-key') // Securely fetch Render key
+        RENDER_API_KEY = credentials('render-api-key')
     }
 
     options {
@@ -20,9 +18,9 @@ pipeline {
             }
         }
 
-        stage('Clone Repo') {
+        stage('Checkout Code') {
             steps {
-                git credentialsId: 'github-username-password', url: "${GIT_REPO}", branch: "${BRANCH}"
+                checkout scm
             }
         }
 
