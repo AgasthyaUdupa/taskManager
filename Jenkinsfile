@@ -17,6 +17,14 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                script {
+                    cleanWs()  // This will clean the workspace
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 script {
