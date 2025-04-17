@@ -1,93 +1,80 @@
 pipeline {
     agent any
-
+    
     environment {
-        BACKEND_URL = 'https://taskmanager-5kmh.onrender.com'
-        FRONTEND_URL = 'https://taskmanager-frontend-uas9.onrender.com'
-        
-        // Render credentials (Secret Text)
-        RENDER_API_KEY = credentials('render-api-key')
+        // Define environment variables if needed (e.g., backend API URL, etc.)
+        GIT_REPO = 'https://github.com/AgasthyaUdupa/taskManager.git'
+        BRANCH = 'main'
+        DOCKER_IMAGE = 'jenkins-docker'
+        DOCKER_REGISTRY = 'your-docker-registry'
+        DOCKER_IMAGE_NAME = 'taskmanager-app'
+    }
 
-        // GitHub token (Secret Text with ID: github-token)
-        GITHUB_TOKEN = credentials('github-token')
-
-        // Render service IDs (from Render dashboard)
-        BACKEND_SERVICE_ID = 'srv-cvv56vhr0fns73a44270'
-        FRONTEND_SERVICE_ID = 'srv-cvv67c3e5dus73eacgkg'
+    tools {
+        // Install the required Git and Docker tools if necessary (if not in the image already)
+        git 'Default'
+        dockerTool 'Docker' // This will reference your Jenkins Docker installation
     }
 
     stages {
-        stage('Clean Workspace') {
+        stage('Clone Repo') {
             steps {
                 script {
-                    cleanWs()  // This will clean the workspace
+                    // Clone the repository using the configured credentials and repository URL
+                    checkout scm
                 }
             }
         }
 
-        stage('Checkout') {
+        stage('Build Docker Images') {
             steps {
                 script {
-                    // Authenticate and clone the private GitHub repository using the PAT
-                    git url: 'https://${GITHUB_TOKEN}@github.com/AgasthyaUdupa/taskManager.git', branch: 'main'
+                    // Build Docker images (you can customize this according to your Docker setup)
+                    echo "Building Docker images..."
+                    sh 'docker build -t ${DOCKER_IMAGE_NAME}:latest .'
                 }
             }
         }
 
-        stage('Build Backend') {
+        stage('Push Docker Image') {
             steps {
-                dir('backend') {
-                    sh 'docker build -t backend .'
+                script {
+                    // Push the Docker image to the registry (if necessary)
+                    echo "Pushing Docker image..."
+                    withDockerRegistry([credentialsId: 'docker-credentials', url: 'https://registry.hub.docker.com']) {
+                        sh 'docker push ${DOCKER_IMAGE_NAME}:latest'
+                    }
                 }
             }
         }
 
-        stage('Build Frontend') {
+        stage('Deploy Application') {
             steps {
-                dir('frontend') {
-                    sh """
-                    docker build --build-arg VITE_BACKEND_URL=${BACKEND_URL} -t frontend .
-                    """
+                script {
+                    // Deploy your application, e.g., using Render or any platform you're deploying to
+                    echo "Deploying the application..."
+                    // Deployment steps here (use Render API or any other deployment mechanism)
                 }
             }
         }
 
-        stage('Test') {
+        stage('Clean Up') {
             steps {
-                echo '🧪 Running backend and frontend tests...'
-                // Add real test scripts here
-            }
-        }
-
-        stage('Deploy Backend to Render') {
-            steps {
-                sh """
-                curl -X POST https://api.render.com/v1/services/${BACKEND_SERVICE_ID}/deploy \\
-                    -H "Authorization: Bearer ${RENDER_API_KEY}" \\
-                    -H "Content-Type: application/json" \\
-                    -d '{}'
-                """
-            }
-        }
-
-        stage('Deploy Frontend to Render') {
-            steps {
-                sh """
-                curl -X POST https://api.render.com/v1/services/${FRONTEND_SERVICE_ID}/deploy \\
-                    -H "Authorization: Bearer ${RENDER_API_KEY}" \\
-                    -H "Content-Type: application/json" \\
-                    -d '{}'
-                """
+                script {
+                    // Optionally clean up unused images or containers if needed
+                    echo "Cleaning up..."
+                    sh 'docker system prune -f'
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Deployment was successful!'
+            echo 'Build and deployment successful!'
         }
         failure {
-            echo '❌ Deployment failed.'
+            echo 'Build or deployment failed.'
         }
     }
 }
